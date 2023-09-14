@@ -2,7 +2,7 @@ use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-fn generate_tree<P: AsRef<Path>>(path: P, exclude: &[&str]) -> Vec<PathBuf> {
+fn generate_tree<P: AsRef<Path>>(path: P, exclude: &[Regex]) -> Vec<PathBuf> {
     let mut results = Vec::new();
 
     if let Ok(entries) = fs::read_dir(&path) {
@@ -22,16 +22,13 @@ fn generate_tree<P: AsRef<Path>>(path: P, exclude: &[&str]) -> Vec<PathBuf> {
     results
 }
 
-fn is_excluded<P: AsRef<Path>>(path: P, exclude: &[&str]) -> bool {
+fn is_excluded<P: AsRef<Path>>(path: P, exclude_patterns: &[Regex]) -> bool {
     path.as_ref().components().any(|comp| {
         let comp_str = comp.as_os_str().to_string_lossy();
-        exclude.iter().any(|&pattern| {
-            let regex_pattern = pattern.replace("*", ".*");
-            let re = Regex::new(&regex_pattern).unwrap();
-            re.is_match(&comp_str)
-        })
+        exclude_patterns.iter().any(|re| re.is_match(&comp_str))
     })
 }
+
 
 fn print_tree(paths: &[PathBuf], root: &Path) {
     for path in paths {
@@ -58,9 +55,9 @@ fn main() {
                 exclude.push(dir_to_exclude.clone());
                 args.next(); // Consume the next argument since it's added to the exclude list
             }
-
+            
             if exclude.is_empty() {
-                eprintln!("Error: Expected at least one directory to exclude after `-o` flag.");
+                eprintln!("Error: Expected at least one directory to exclude after `-x` flag.");
                 return;
             }
         }
@@ -68,8 +65,13 @@ fn main() {
 
     println!("Excluding directories: {:?}", exclude);
 
-    let exclude_slice: &[&str] = &exclude.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
+    // Compile the exclusion patterns into Regex
+    let exclude_patterns: Vec<Regex> = exclude.iter().map(|pattern| {
+        let regex_pattern = pattern.replace("*", ".*");
+        Regex::new(&regex_pattern).expect("Failed to compile regex pattern")
+    }).collect();
 
-    let paths = generate_tree(&current_dir, exclude_slice);
+    // Modify the generate_tree function call to use the compiled patterns
+    let paths = generate_tree(&current_dir, &exclude_patterns);
     print_tree(&paths, &current_dir);
 }
