@@ -1,6 +1,6 @@
 # Dirr - A Rust Directory Tree Printer
 
-`dirr` is a simple command-line utility built in Rust that displays the directory tree structure, allowing the user to optionally exclude specific directories.
+`dirr` is a simple, minimal, command-line utility built in Rust that displays the directory tree structure, allowing the user to optionally exclude specific directories.
 
 ## Features
 
@@ -15,13 +15,19 @@ To use `dirr`, navigate to the directory you want to display and run the compile
 $ dirr
 ```
 
-If you wish to exclude specific directories from the output, use the `-o` flag followed by the directory name:
+If you wish to exclude specific directories from the output, use the `--exclude` or `-x` flag followed by the directory name:
 
 ```bash
-$ dirr -o example
+$ dirr --exclude example
 ```
-
 In this case, the directory named `example` will be excluded from the printed tree.
+
+For a detailed overview of all available commands and their explanations, use the `--help` or `-h` flag:
+```bash
+$ dirr --help
+```
+This will provide a helpful overview of how to use the different flags and features available in dirr.
+
 
 ## How It Works
 
